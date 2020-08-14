@@ -1,4 +1,4 @@
-def get_shape(A: list) -> list:
+def MatrixDim(A: list) -> list:
     row = len(A)
 
     if not A:
@@ -9,11 +9,11 @@ def get_shape(A: list) -> list:
     return [row, column]
 
 
-def matrix_mul(A: list, B: list):
+def MatrixMult(A: list, B: list):
     result = []
 
-    dim_a = get_shape(A)
-    dim_b = get_shape(B)
+    dim_a = MatrixDim(A)
+    dim_b = MatrixDim(B)
 
     if dim_a[1] is dim_b[0]:           # Checking if A and B can mutiply
         for i in range(dim_a[0]):
@@ -29,10 +29,10 @@ def matrix_mul(A: list, B: list):
         return -1
 
 
-def pivots(data: list) -> list:
+def pivots(A: list) -> list:
     result = []
 
-    for i, row in enumerate(data):
+    for i, row in enumerate(A):
         for j, entry in enumerate(row):
             if entry != 0:
                 result.append(j)
@@ -42,7 +42,7 @@ def pivots(data: list) -> list:
     return result
 
 
-def is_rref(A: list) -> bool:
+def M265isRref(A: list) -> bool:
     pivot_points: list = pivots(A)
     result: bool = all(a < b if a != -1 and b != -1 else a >=
                        b for a, b in zip(pivot_points, pivot_points[1:]))
@@ -61,15 +61,15 @@ def is_rref(A: list) -> bool:
     return result
 
 
-def back_sub(A: list, b: list) -> list:
-    [row, column] = get_shape(A)
+def M265BackSubs(A: list, b: list) -> list:
+    [row, column] = MatrixDim(A)
     pivot_points: list = pivots(A)
     par_sol: list = [0 for _ in range(column)]
     homg_sol: list = [[0 for _ in range(column)] for i in range(
         column) if i not in pivot_points]
     sol_set: list = []
 
-    if is_rref(A):
+    if M265isRref(A):
         homg_sol_index: int = 0
         par_sol_index: int = 0
         for j in range(column):
@@ -93,138 +93,139 @@ def back_sub(A: list, b: list) -> list:
     return sol_set
 
 
-def print_matrix(data: list):
-    for i in range(len(data)):
-        print(data[i])
+def print_matrix(A: list):
+    for i in range(len(A)):
+        print(A[i])
 
 
-def identity_matrix(length: int) -> list:
-    data = []
+def M265Identity(length: int) -> list:
+    A = []
 
     for i in range(length):
-        data.append([])
+        A.append([])
         for j in range(length):
             if i == j:
-                data[i].append(1)
+                A[i].append(1)
             else:
-                data[i].append(0)
+                A[i].append(0)
 
-    return data
+    return A
 
 
-def gaussian_elimination(data: list, debug: bool = False) -> list:
-    [row, _column] = get_shape(data)
+def M265GaussianElimination(A: list, debug: bool = False) -> list:
+    [row, _column] = MatrixDim(A)
     result = []
 
     if debug:
         print("Starting")
-        print_matrix(data)
+        print_matrix(A)
         print()
 
-    while not is_rref(data):
-        pivot_points = pivots(data)
+
+    while not M265isRref(A):
+        pivot_points = pivots(A)
         for index, (a, b) in enumerate(zip(pivot_points, pivot_points[1:])):
-            if debug:
+            if not debug:
                 print(
                     f"index = {index}, a = {a}\nindex = {index + 1}, b = {b}")
             if a == -1 and b != -1:
-                i = identity_matrix(row)
+                i = M265Identity(row)
                 for j in range(row):
                     i[index][j], i[index + 1][j] = i[index + 1][j], i[index][j]
                 result.append(i)
-                data = matrix_mul(i, data)
-                pivot_points[index], pivot_points[index +
-                                                  1] = pivot_points[index + 1], pivot_points[index]
+                A = MatrixMult(i, A)
+                # pivot_points[index], pivot_points[index +
+                                                  # 1] = pivot_points[index + 1], pivot_points[index]
                 if debug:
                     print("Found zero row above non-zero row swapping")
-                    print_matrix(data)
+                    print_matrix(A)
                     print()
+                break
             elif a > b and a != -1 and b != -1:
-                i = identity_matrix(row)
+                i = M265Identity(row)
                 for j in range(row):
                     i[index][j], i[index + 1][j] = i[index + 1][j], i[index][j]
                 result.append(i)
-                data = matrix_mul(i, data)
-                pivot_points[index], pivot_points[index +
-                                                  1] = pivot_points[index + 1], pivot_points[index]
+                A = MatrixMult(i, A)
+                # pivot_points[index], pivot_points[index +
+                                                  # 1] = pivot_points[index + 1], pivot_points[index]
                 if debug:
                     print("Arranging pivot points swapping two adjacent rows")
-                    print_matrix(data)
+                    print_matrix(A)
                     print()
+                break
             elif a == b and a != -1 and b != -1:
-                i = identity_matrix(row)
-                multiply_by = -data[index + 1][b] / data[index][a]
+                i = M265Identity(row)
+                multiply_by = -A[index + 1][b] / A[index][a]
                 for j in range(row):
                     i[index + 1][j] += i[index][j] * multiply_by
                 result.append(i)
-                data = matrix_mul(i, data)
-                pivot_points[index + 1] = a + 1
+                A = MatrixMult(i, A)
                 if debug:
                     print(
                         "Eliminating pivot point. Multiplying above row with ratio and adding to below row")
-                    print_matrix(data)
-                    print()
+                    print_matrix(A)
+                break
             else:
-                if a != -1 and data[index][a] != 1:
-                    i = identity_matrix(row)
-                    for j in range(row):
-                        i[index][j] /= data[index][a]
-                    result.append(i)
-                    data = matrix_mul(i, data)
-                    if debug:
-                        print("1- Leading variable is not one. Dividing by ratio")
-                        print_matrix(data)
-                        print()
-                elif b != -1 and data[index + 1][b] != 1:
-                    i = identity_matrix(row)
-                    for j in range(row):
-                        i[index + 1][j] /= data[index + 1][b]
-                    result.append(i)
-                    data = matrix_mul(i, data)
-                    if debug:
-                        print("1- Leading variable is not one. Dividing by ratio")
-                        print_matrix(data)
-                        print()
-                elif a != -1 and b != -1:
+                if (a != -1 and A[index][a] != 1) or (b != -1 and A[index + 1][b] != 1):
+                    if a != -1 and A[index][a] != 1:
+                        i = M265Identity(row)
+                        i[index][index] /= A[index][a]
+                        result.append(i)
+                        A = MatrixMult(i, A)
+                        if debug:
+                            print("1- Leading variable is not 1. Dividing by ratio")
+                            print_matrix(A)
+                            print()
+                        break
+                    if b != -1 and A[index + 1][b] != 1:
+                        i = M265Identity(row)
+                        i[index + 1][index + 1] /= A[index + 1][b]
+                        result.append(i)
+                        A = MatrixMult(i, A)
+                        if debug:
+                            print("1- Leading variable is not one. Dividing by ratio")
+                            print_matrix(A)
+                            print()
+                        break
+                else:
                     if debug:
                         print("Cleaning above the leading variable")
                     for i in range(row):
-                        if i < index and data[i][a] != 0:
-                            identity = identity_matrix(row)
-                            multiply_by = -data[i][a] / data[index][a]
-                            for j in range(row):
-                                identity[i][j] += identity[index][j] * \
-                                    multiply_by
+                        if a != -1 and i < index and A[i][a] != 0:
+                            identity = M265Identity(row)
+                            multiply_by = -A[i][a] / A[index][a]
+                            identity[i][index] = identity[index][index] * \
+                                multiply_by
                             result.append(identity)
-                            data = matrix_mul(identity, data)
-                        elif i < index + 1 and data[i][b] != 0:
-                            identity = identity_matrix(row)
-                            multiply_by = -data[i][b] / data[index + 1][b]
-                            for j in range(row):
-                                identity[i][j] += identity[index +
-                                                           1][j] * multiply_by
+                            A = MatrixMult(identity, A)
+                        if b != -1 and i < index + 1 and A[i][b] != 0:
+                            identity = M265Identity(row)
+                            multiply_by = -A[i][b] / A[index + 1][b]
+                            identity[i][index + 1] = identity[index +
+                                                       1][index + 1] * multiply_by
                             result.append(identity)
-                            data = matrix_mul(identity, data)
+                            A = MatrixMult(identity, A)
                     if debug:
-                        print_matrix(data)
+                        print_matrix(A)
                         print()
 
     return result
 
 
-def gaussian_elimination_tests():
+def M265GaussianElimination_tests():
     m1 = [[1, 1, 2], [2, 2, 1]]
     m2 = [[0, 0, 0, 0], [1, 1, 2, 0], [2, 2, 4, 1]]
     m3 = [[0, 1, 2, 0], [0, 2, 4, 1]]
     m4 = [[0, 1], [2, 0], [0, 2], [4, 1]]
     m5 = [[0, 1], [2, 0]]
-    m6 = [[0, 2], [0, 0], [0, 0]]
+    m6 = [[0, 0], [0, 0], [0, 0]]
 
-    tests = [m2]
+    tests = [m6]
 
     for i in range(len(tests)):
-        for elementary_matrix in gaussian_elimination(tests[i], True):
-            tests[i] = matrix_mul(elementary_matrix, tests[i])
+        for elementary_matrix in M265GaussianElimination(tests[i], True):
+            tests[i] = MatrixMult(elementary_matrix, tests[i])
 
     print("result")
     for test in tests:
@@ -232,17 +233,17 @@ def gaussian_elimination_tests():
         print()
 
 
-def back_sub_tests():
+def M265BackSubs_tests():
     print("\n")
     print(" --- TEST 1 ---")
     BS1 = [[1, 1, 0, 3, 4], [0, 0, 1, 1, 8], [0, 0, 0, 0, 0]]
     b1 = [1, 2, 0]
     b1n = [1, 2, 1]
     print(" consistent")
-    Sol1 = back_sub(BS1, b1)
+    Sol1 = M265BackSubs(BS1, b1)
     print(Sol1)
     print(" inconsisten")
-    Sol1n = back_sub(BS1, b1n)
+    Sol1n = M265BackSubs(BS1, b1n)
     print(Sol1n)
 
     print("\n")
@@ -250,7 +251,7 @@ def back_sub_tests():
     print("#var < #equ")
     BS2n = [[0, 1], [0, 0], [0, 0]]
     b2n = [0, 1, 0]
-    Sol2n = back_sub(BS2n, b2n)
+    Sol2n = M265BackSubs(BS2n, b2n)
     print(" inconsistent")
     print(Sol2n)
 
@@ -259,7 +260,7 @@ def back_sub_tests():
     print("#var < #equ")
     BS2u = [[1, 0], [0, 1], [0, 0]]
     b2u = [3, 4, 0]
-    Sol2u = back_sub(BS2u, b2u)
+    Sol2u = M265BackSubs(BS2u, b2u)
     print(" consistent: unique")
     print(Sol2u)
 
@@ -269,7 +270,7 @@ def back_sub_tests():
     BS2i = [[0, 1], [0, 0], [0, 0]]
     b2i = [3, 0, 0]
     print_matrix(BS2i)
-    Sol2i = back_sub(BS2i, b2i)
+    Sol2i = M265BackSubs(BS2i, b2i)
     print(" consistent: infinite")
     print(Sol2i)
 
@@ -279,7 +280,7 @@ def back_sub_tests():
     BS3n = [[1, 0, 0], [0, 0, 0], [0, 0, 0]]
     b3n = [1, 1, 0]
     print(" inconsistent")
-    Sol3n = back_sub(BS3n, b3n)
+    Sol3n = M265BackSubs(BS3n, b3n)
     print(Sol3n)
 
     print("\n")
@@ -288,7 +289,7 @@ def back_sub_tests():
     BS3i = [[0, 1, 0], [0, 0, 1], [0, 0, 0]]
     b3i = [1, 1, 0]
     print(" consistent: infinite ")
-    Sol3i = back_sub(BS3i, b3i)
+    Sol3i = M265BackSubs(BS3i, b3i)
     print(Sol3i)
 
     print("\n")
@@ -297,7 +298,7 @@ def back_sub_tests():
     BS3u = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
     b3u = [2, 1, 3]
     print(" consistent: unique ")
-    Sol3u = back_sub(BS3u, b3u)
+    Sol3u = M265BackSubs(BS3u, b3u)
     print(Sol3u)
 
     print("\n")
@@ -305,10 +306,10 @@ def back_sub_tests():
     BS4 = [[0, 0, 0]]
     b4 = [0]
     b4n = [1]
-    Sol4 = back_sub(BS4, b4)
+    Sol4 = M265BackSubs(BS4, b4)
     print("zero matrix (R<C): consistent")
     print(Sol4)
-    Sol4n = back_sub(BS4, b4n)
+    Sol4n = M265BackSubs(BS4, b4n)
     print("zero matrix (R<C): inconsistent")
     print(Sol4n)
 
@@ -317,10 +318,10 @@ def back_sub_tests():
     BS5 = [[0], [0]]
     b5 = [0, 0]
     b5n = [1, 0]
-    Sol5 = back_sub(BS5, b5)
+    Sol5 = M265BackSubs(BS5, b5)
     print("zero matrix (R>C): consistent")
     print(Sol5)
-    Sol5n = back_sub(BS5, b5n)
+    Sol5n = M265BackSubs(BS5, b5n)
     print("zero matrix (R>C): inconsistent")
     print(Sol5n)
 
@@ -329,15 +330,15 @@ def mein_test():
     m7 = [[0, 1, 2, 4], [1, 0, 2, 0], [0, 2, 1, 1]]
     print_matrix(m7)
     print()
-    for elementary_matrix in gaussian_elimination(m7):
+    for elementary_matrix in M265GaussianElimination(m7):
         print("elemantary matrix:")
         print_matrix(elementary_matrix)
         print()
         print("next matrix")
-        m7 = matrix_mul(elementary_matrix, m7)
+        m7 = MatrixMult(elementary_matrix, m7)
         print_matrix(m7)
         print()
 
 
 if __name__ == "__main__":
-    gaussian_elimination_tests()
+    M265GaussianElimination_tests()
